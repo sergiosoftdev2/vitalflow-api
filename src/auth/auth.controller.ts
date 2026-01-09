@@ -1,11 +1,23 @@
-import { Controller, Get, Req, Res, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Post, Req, Res, UseGuards } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthGuard } from '@nestjs/passport';
 import type { Response } from 'express';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
+
+  @Post('register')
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
+  }
+
+  @Post('login')
+  async login(@Body() loginDto: LoginDto) {
+    return this.authService.validateUser(loginDto);
+  }
 
   @Get('google')
   @UseGuards(AuthGuard('google'))
@@ -21,6 +33,6 @@ export class AuthController {
     }
 
     const userData = encodeURIComponent(JSON.stringify(result.user));
-    return res.redirect(`http://localhost:4200/login-success?user=${userData}`);
+    return res.redirect(`http://localhost:4200/success?user=${userData}`);
   }
 }
