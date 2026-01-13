@@ -8,6 +8,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ClinicsModule } from './clinics/clinics.module';
 import { AppointmentsModule } from './appointments/appointments.module';
+import { ClientsModule } from './clients/clients.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -27,9 +30,16 @@ import { AppointmentsModule } from './appointments/appointments.module';
     UsersModule,
     ClinicsModule,
     AppointmentsModule,
+    ClientsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: JwtAuthGuard,
+    },
+  ],
 })
 export class AppModule implements OnModuleInit {
   constructor(private readonly usersService: UsersService) {}

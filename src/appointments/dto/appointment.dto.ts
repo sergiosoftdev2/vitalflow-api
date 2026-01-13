@@ -23,7 +23,7 @@ export class AppointmentDto {
   @ApiProperty({ example: 'room_01' })
   @IsString()
   @IsNotEmpty()
-  roomId: string;
+  boxId: string;
 
   @ApiProperty({ example: '2026-01-15T09:00:00Z' })
   @IsDateString()

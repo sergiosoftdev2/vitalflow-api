@@ -3,13 +3,19 @@ import { UsersService } from '../users/users.service';
 import * as bcrypt from 'bcryptjs';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SessionsService } from '../sessions/sessions.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
-  constructor(private usersService: UsersService) {}
+  constructor(
+    private usersService: UsersService,
+    private sessionsService: SessionsService,
+    private jwtService: JwtService,
+  ) {}
 
   async register(registerDto: RegisterDto) {
-    const { email, password, firstName, lastName } = registerDto;
+    const { email, password, firstName, lastName, deviceType } = registerDto;
 
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
@@ -24,22 +30,25 @@ export class AuthService {
       firstName,
       lastName,
     });
+    
+    // Auto-login after register
+    const session = await this.sessionsService.createSession({
+        userId: (user as any)._id.toString(),
+        deviceType: deviceType || 'unknown-register',
+        rememberMe: false,
+    });
 
-    // Handle Mongoose Document vs POJO if necessary, though UserDto implies POJO usually.
-    // Casting to any because UserDto hides the password field, but it exists at runtime.
-    const userObj =
-      typeof (user as any).toObject === 'function'
-        ? (user as any).toObject()
-        : user;
-    const { password: _, ...userResponse } = userObj as any;
-    return userResponse;
+    const payload = { sub: (user as any)._id.toString(), sid: session._id.toString() };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: user,
+    };
   }
 
   async validateUser(loginDto: LoginDto) {
-    const { email, password } = loginDto;
+    const { email, password, deviceType, rememberMe } = loginDto;
     const user = await this.usersService.findByEmail(email);
-
-    // Cast to any to access password which is hidden by UserDto type
     const userWithPassword = user as any;
 
     if (!userWithPassword || !userWithPassword.password) {
@@ -55,14 +64,19 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // Since findByEmail uses .lean(), we verify if toObject exists before calling it,
-    // or just treat it as an object.
-    const userObj =
-      typeof (user as any).toObject === 'function'
-        ? (user as any).toObject()
-        : user;
-    const { password: _, ...userResponse } = userObj as any;
-    return userResponse;
+    const session = await this.sessionsService.createSession({
+        userId: user._id.toString(),
+        deviceType: deviceType || 'unknown-login',
+        rememberMe: !!rememberMe,
+    });
+
+    // Generate Payload
+    const payload = { sub: user._id.toString(), sid: session._id.toString() };
+
+    return {
+      access_token: this.jwtService.sign(payload),
+      user: user,
+    };
   }
 
   async googleLogin(req) {
@@ -72,9 +86,19 @@ export class AuthService {
 
     const user = await this.usersService.findOrCreate(req.user);
 
+    // Create Session for Google Login too
+    const session = await this.sessionsService.createSession({
+        userId: user._id.toString(),
+        deviceType: 'google-oauth',
+        rememberMe: true, // Google logins are usually persistent
+    });
+
+    const payload = { sub: user._id.toString(), sid: session._id.toString() };
+
     return {
       message: 'User information from google',
       user: user,
+      access_token: this.jwtService.sign(payload),
     };
   }
 }
