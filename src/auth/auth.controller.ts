@@ -38,6 +38,7 @@ export class AuthController {
     }
 
     const userData = encodeURIComponent(JSON.stringify(result.user));
-    return res.redirect(`http://localhost:4200/success?user=${userData}`);
+    const token = result.access_token;
+    return res.redirect(`http://localhost:4200/success?user=${userData}&token=${token}`);
   }
 }
