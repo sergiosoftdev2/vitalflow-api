@@ -1,7 +1,7 @@
 import { IsString, IsNotEmpty, IsBoolean, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
-export class CreateSessionDto {
+export class SessionDto {
   @ApiProperty({ description: 'The user ID linking to the session', example: '60d0fe4f5311236168a109ca' })
   @IsString()
   @IsNotEmpty()

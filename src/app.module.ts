@@ -9,6 +9,7 @@ import { AppService } from './app.service';
 import { ClinicsModule } from './clinics/clinics.module';
 import { AppointmentsModule } from './appointments/appointments.module';
 import { ClientsModule } from './clients/clients.module';
+import { SessionsModule } from './sessions/sessions.module';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 
@@ -31,6 +32,7 @@ import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
     ClinicsModule,
     AppointmentsModule,
     ClientsModule,
+    SessionsModule,
   ],
   controllers: [AppController],
   providers: [

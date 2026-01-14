@@ -3,10 +3,13 @@ import { MongooseModule } from '@nestjs/mongoose';
 import { SessionsService } from './sessions.service';
 import { Session, SessionSchema } from './schemas/session.schema';
 
+import { SessionsController } from './sessions.controller';
+
 @Module({
   imports: [
     MongooseModule.forFeature([{ name: Session.name, schema: SessionSchema }]),
   ],
+  controllers: [SessionsController],
   providers: [SessionsService],
   exports: [SessionsService],
 })

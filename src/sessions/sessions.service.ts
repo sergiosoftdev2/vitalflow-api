@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model, Types } from 'mongoose';
 import { Session } from './schemas/session.schema';
-import { CreateSessionDto } from './dto/create-session.dto';
+import { SessionDto } from './dto/session.dto';
 
 @Injectable()
 export class SessionsService {
@@ -10,8 +10,8 @@ export class SessionsService {
     @InjectModel(Session.name) private sessionModel: Model<Session>,
   ) {}
 
-  async createSession(createSessionDto: CreateSessionDto): Promise<Session> {
-    const { userId, deviceType, rememberMe } = createSessionDto;
+  async createSession(sessionDto: SessionDto): Promise<Session> {
+    const { userId, deviceType, rememberMe } = sessionDto;
 
     const daysValid = rememberMe ? 30 : 7;
     const expiresAt = new Date();
@@ -47,5 +47,13 @@ export class SessionsService {
 
   async findOne(id: string): Promise<Session | null> {
     return this.sessionModel.findById(id).exec();
+  }
+
+  async findAllByUser(userId: string): Promise<Session[]> {
+    return this.sessionModel.find({ user: new Types.ObjectId(userId) }).exec();
+  }
+
+  async remove(id: string): Promise<void> {
+    await this.sessionModel.findByIdAndDelete(id).exec();
   }
 }
